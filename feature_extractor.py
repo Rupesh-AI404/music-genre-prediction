@@ -4,23 +4,19 @@ import json  # To save our final data in a structured JSON format (we'll later s
 import librosa  # The core library for audio analysis and feature extraction
 
 # Define the path to the dataset
-DATASET_PATH = "genres_original"
+DATASET_PATH = "GTZAN music genre dataset/genres"
 
 # Define the path where the processed data (features) will be saved
 JSON_PATH = "data.json"
 
-# --- ADD THIS NEW BLOCK OF CODE HERE ---
 # Define constants for audio processing
 SAMPLE_RATE = 22050  # The standard sample rate for librosa's default analysis
 TRACK_DURATION_SECONDS = 30  # All tracks in GTZAN are 30 seconds long
 NUM_SEGMENTS = 10  # We will divide each track into 10 segments
 
 # Calculate the number of audio samples we expect per 30-second track
-# This will be useful for our segmentation logic later on.
 SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
 
-
-# ----------------------------------------
 
 def process_dataset(dataset_path, json_path):
     """
@@ -41,14 +37,34 @@ def process_dataset(dataset_path, json_path):
         "features": []  # The extracted features for each track/segment
     }
 
-    # --- The main processing loop will be added here in the upcoming tasks ---
     print("Starting feature extraction...")
+
+    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+    # Iterate through all the genre folders in the dataset path
+    # We use sorted() to ensure a consistent order every time we run the script.
+    for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
+
+        # Construct the full path to the current genre folder
+        genre_path = os.path.join(dataset_path, genre_folder)
+
+        # We only want to process directories, so we check if the path is a directory.
+        # This is a robust way to skip any stray files (like .DS_Store on macOS)
+        if os.path.isdir(genre_path):
+            # Store the genre name in our mapping list.
+            # This is crucial for label encoding later on.
+            data["mapping"].append(genre_folder)
+
+            print(f"\nProcessing genre: {genre_folder}")
+
+            # --- A nested loop to process each .wav file will go here in the next task ---
+
+    # --- END OF THE NEW CODE BLOCK ---
 
     # After the loop, we will save the data to the specified JSON file
     # with open(json_path, "w") as fp:
     #     json.dump(data, fp, indent=4)
 
-    print("Feature extraction complete.")
+    print("\nFeature extraction complete.")
 
 
 # This is a standard Python construct. The code inside this block will only run
