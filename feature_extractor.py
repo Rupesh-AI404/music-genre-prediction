@@ -4,11 +4,23 @@ import json  # To save our final data in a structured JSON format (we'll later s
 import librosa  # The core library for audio analysis and feature extraction
 
 # Define the path to the dataset
-DATASET_PATH = "GTZAN music genre dataset/genres"
+DATASET_PATH = "genres_original"
 
 # Define the path where the processed data (features) will be saved
-JSON_PATH = "music_genre_data.json"
+JSON_PATH = "data.json"
 
+# --- ADD THIS NEW BLOCK OF CODE HERE ---
+# Define constants for audio processing
+SAMPLE_RATE = 22050  # The standard sample rate for librosa's default analysis
+TRACK_DURATION_SECONDS = 30  # All tracks in GTZAN are 30 seconds long
+NUM_SEGMENTS = 10  # We will divide each track into 10 segments
+
+# Calculate the number of audio samples we expect per 30-second track
+# This will be useful for our segmentation logic later on.
+SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
+
+
+# ----------------------------------------
 
 def process_dataset(dataset_path, json_path):
     """
