@@ -2,6 +2,7 @@
 import os
 import json
 import librosa
+import numpy as np  # Add this import
 
 # Define the path to the dataset
 DATASET_PATH = "GTZAN music genre dataset/genres"
@@ -14,70 +15,61 @@ SAMPLE_RATE = 22050
 TRACK_DURATION_SECONDS = 30
 NUM_SEGMENTS = 10
 
+# --- ADD THIS NEW BLOCK OF CONSTANTS ---
+# Define constants for MFCC extraction
+NUM_MFCC = 13  # Number of MFCC coefficients to extract
+N_FFT = 2048  # Window size for FFT
+HOP_LENGTH = 512  # Number of samples to slide the FFT window
+# ----------------------------------------
+
 # Calculate the number of audio samples we expect per 30-second track
 SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
 
 
 def process_dataset(dataset_path, json_path):
-    """
-    The main function to extract features from the dataset and save them to a JSON file.
-    ...
-    """
-
-    data = {
-        "mapping": [],
-        "labels": [],
-        "features": []
-    }
-
-    print("Starting feature extraction...")
-
-    # ... (previous code: imports, constants, function definition)
+    # ... (the data dictionary remains the same)
 
     for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
-        genre_path = os.path.join(dataset_path, genre_folder)
-
-        if os.path.isdir(genre_path):
-            data["mapping"].append(genre_folder)
-            print(f"\nProcessing genre: {genre_folder}")
-
-            for filename in sorted(os.listdir(genre_path)):
+        # ... (the outer loop remains the same)
+        if os.path.isdir(DATASET_PATH):
+            # ... (the inner loop starts)
+            for filename in sorted(os.listdir(DATASET_PATH)):
                 if filename.endswith(".wav"):
-                    file_path = os.path.join(genre_path, filename)
+                    file_path = os.path.join(DATASET_PATH, filename)
 
                     try:
-                        # Load the audio file
                         signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
 
-                        # --- THIS IS THE NEW CODE BLOCK TO ADD ---
-
-                        # We'll add a simple check to ensure the loaded signal is long enough
-                        # to be split into our desired number of segments.
-                        # SAMPLES_PER_TRACK was calculated as SAMPLE_RATE * TRACK_DURATION_SECONDS
                         if len(signal) >= SAMPLES_PER_TRACK:
-
-                            # Calculate the number of samples per segment
                             num_samples_per_segment = int(SAMPLES_PER_TRACK / NUM_SEGMENTS)
 
-                            # Iterate through the segments
                             for s in range(NUM_SEGMENTS):
-                                # Calculate the start and end sample indices for the current segment
                                 start_sample = s * num_samples_per_segment
                                 end_sample = start_sample + num_samples_per_segment
-
-                                # Extract the segment using NumPy array slicing. The 'segment' variable
-                                # now holds a 3-second chunk of audio data.
                                 segment = signal[start_sample:end_sample]
 
-                                # The next tasks will involve extracting features from this 'segment'.
-                                # For example:
-                                # mfccs = librosa.feature.mfcc(y=segment, sr=sr)
-                        # --- END OF THE NEW CODE BLOCK ---
+                                # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+                                # Extract MFCCs from the segment.
+                                # The result 'mfccs' is a 2D NumPy array.
+                                mfccs = librosa.feature.mfcc(y=segment,
+                                                             sr=sr,
+                                                             n_mfcc=NUM_MFCC,
+                                                             n_fft=N_FFT,
+                                                             hop_length=HOP_LENGTH)
+
+                                # To get a single feature vector that summarizes the segment,
+                                # we aggregate the MFCCs over the time frames by taking the mean.
+                                # The shape of mfccs is (NUM_MFCC, num_frames), so we take the mean
+                                # along axis=1 (the time axis).
+                                mfccs_processed = np.mean(mfccs, axis=1)
+
+                                # In later steps, we will combine this 'mfccs_processed' vector
+                                # with other features and store it.
+                                # --- END OF THE NEW CODE BLOCK ---
 
                     except Exception as e:
                         print(f"Error loading file {file_path}: {e}")
                         continue
-
     # ... (rest of the code)
 
     print("\nFeature extraction complete.")
