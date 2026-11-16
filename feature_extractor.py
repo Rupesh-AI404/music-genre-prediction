@@ -1,7 +1,7 @@
 # Import necessary libraries
-import os  # To interact with the file system (navigate paths, list files)
-import json  # To save our final data in a structured JSON format (we'll later switch to CSV)
-import librosa  # The core library for audio analysis and feature extraction
+import os
+import json
+import librosa
 
 # Define the path to the dataset
 DATASET_PATH = "GTZAN music genre dataset/genres"
@@ -10,9 +10,9 @@ DATASET_PATH = "GTZAN music genre dataset/genres"
 JSON_PATH = "data.json"
 
 # Define constants for audio processing
-SAMPLE_RATE = 22050  # The standard sample rate for librosa's default analysis
-TRACK_DURATION_SECONDS = 30  # All tracks in GTZAN are 30 seconds long
-NUM_SEGMENTS = 10  # We will divide each track into 10 segments
+SAMPLE_RATE = 22050
+TRACK_DURATION_SECONDS = 30
+NUM_SEGMENTS = 10
 
 # Calculate the number of audio samples we expect per 30-second track
 SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
@@ -21,55 +21,67 @@ SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
 def process_dataset(dataset_path, json_path):
     """
     The main function to extract features from the dataset and save them to a JSON file.
-
-    This function will iterate through all genre sub-folders in the dataset, process
-    each audio file, and extract relevant features.
-
-    Args:
-        dataset_path (str): The path to the root of the dataset directory.
-        json_path (str): The path to the file where the extracted data will be saved.
+    ...
     """
 
-    # Dictionary to store all our data: mapping genres to a list of features
     data = {
-        "mapping": [],  # List of genre names, e.g., ["blues", "classical", ...]
-        "labels": [],  # The corresponding genre label (as an integer) for each track/segment
-        "features": []  # The extracted features for each track/segment
+        "mapping": [],
+        "labels": [],
+        "features": []
     }
 
     print("Starting feature extraction...")
 
-    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
-    # Iterate through all the genre folders in the dataset path
-    # We use sorted() to ensure a consistent order every time we run the script.
-    for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
+    # ... (previous code: imports, constants, function definition)
 
-        # Construct the full path to the current genre folder
+    for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
         genre_path = os.path.join(dataset_path, genre_folder)
 
-        # We only want to process directories, so we check if the path is a directory.
-        # This is a robust way to skip any stray files (like .DS_Store on macOS)
         if os.path.isdir(genre_path):
-            # Store the genre name in our mapping list.
-            # This is crucial for label encoding later on.
             data["mapping"].append(genre_folder)
-
             print(f"\nProcessing genre: {genre_folder}")
 
-            # --- A nested loop to process each .wav file will go here in the next task ---
+            for filename in sorted(os.listdir(genre_path)):
+                if filename.endswith(".wav"):
+                    file_path = os.path.join(genre_path, filename)
 
-    # --- END OF THE NEW CODE BLOCK ---
+                    try:
+                        # Load the audio file
+                        signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
 
-    # After the loop, we will save the data to the specified JSON file
-    # with open(json_path, "w") as fp:
-    #     json.dump(data, fp, indent=4)
+                        # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
+                        # We'll add a simple check to ensure the loaded signal is long enough
+                        # to be split into our desired number of segments.
+                        # SAMPLES_PER_TRACK was calculated as SAMPLE_RATE * TRACK_DURATION_SECONDS
+                        if len(signal) >= SAMPLES_PER_TRACK:
+
+                            # Calculate the number of samples per segment
+                            num_samples_per_segment = int(SAMPLES_PER_TRACK / NUM_SEGMENTS)
+
+                            # Iterate through the segments
+                            for s in range(NUM_SEGMENTS):
+                                # Calculate the start and end sample indices for the current segment
+                                start_sample = s * num_samples_per_segment
+                                end_sample = start_sample + num_samples_per_segment
+
+                                # Extract the segment using NumPy array slicing. The 'segment' variable
+                                # now holds a 3-second chunk of audio data.
+                                segment = signal[start_sample:end_sample]
+
+                                # The next tasks will involve extracting features from this 'segment'.
+                                # For example:
+                                # mfccs = librosa.feature.mfcc(y=segment, sr=sr)
+                        # --- END OF THE NEW CODE BLOCK ---
+
+                    except Exception as e:
+                        print(f"Error loading file {file_path}: {e}")
+                        continue
+
+    # ... (rest of the code)
 
     print("\nFeature extraction complete.")
 
 
-# This is a standard Python construct. The code inside this block will only run
-# when the script is executed directly (e.g., `python feature_extractor.py`).
-# It will not run if the script is imported as a module into another script.
-# This makes our code reusable and organized.
 if __name__ == "__main__":
     process_dataset(DATASET_PATH, JSON_PATH)
