@@ -5,7 +5,7 @@ import os
 # Define a constant for the path to our dataset.
 # This makes the code cleaner and easier to modify if the folder name changes.
 # We assume this script is running from the project root ('music-genre-classifier').
-DATASET_PATH = "genres_original"
+DATASET_PATH = "GTZAN music genre dataset/genres"
 
 # A basic sanity check to ensure the dataset directory actually exists
 # before we try to loop through it. This prevents errors if the script
