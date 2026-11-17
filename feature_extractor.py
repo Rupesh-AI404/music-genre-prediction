@@ -55,7 +55,7 @@ def process_dataset(dataset_path, json_path):
                                                              sr=sr,
                                                              n_mfcc=NUM_MFCC,
                                                              n_fft=N_FFT,
-                                                             hop_length=HOP_LENGTH)
+                                                             hop_length=HOP_LENGTH,)
 
                                 # To get a single feature vector that summarizes the segment,
                                 # we aggregate the MFCCs over the time frames by taking the mean.
