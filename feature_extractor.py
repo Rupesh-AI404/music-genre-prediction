@@ -2,6 +2,7 @@ import os
 import json
 import librosa
 import numpy as np
+import pandas as pd
 
 # Audio processing constants
 SAMPLE_RATE = 22050
@@ -85,7 +86,7 @@ def process_dataset(dataset_path, json_path):
                         hop_length=HOP_LENGTH
                     ),
                     axis=1
-                )  # shape: (13,)
+                )
 
                 chroma_processed = np.mean(
                     librosa.feature.chroma_stft(
@@ -95,7 +96,7 @@ def process_dataset(dataset_path, json_path):
                         hop_length=HOP_LENGTH
                     ),
                     axis=1
-                )  # shape: (12,)
+                )
 
                 spectral_centroid_processed = float(np.mean(
                     librosa.feature.spectral_centroid(
@@ -104,7 +105,7 @@ def process_dataset(dataset_path, json_path):
                         n_fft=N_FFT,
                         hop_length=HOP_LENGTH
                     )
-                ))  # scalar
+                ))
 
                 spectral_rolloff_processed = float(np.mean(
                     librosa.feature.spectral_rolloff(
@@ -113,14 +114,14 @@ def process_dataset(dataset_path, json_path):
                         n_fft=N_FFT,
                         hop_length=HOP_LENGTH
                     )
-                ))  # scalar
+                ))
 
                 zcr_processed = float(np.mean(
                     librosa.feature.zero_crossing_rate(
                         y=segment,
                         hop_length=HOP_LENGTH
                     )
-                ))  # scalar
+                ))
 
                 # Combine into one feature vector
                 feature_vector = np.hstack((
@@ -129,19 +130,29 @@ def process_dataset(dataset_path, json_path):
                     spectral_centroid_processed,
                     spectral_rolloff_processed,
                     zcr_processed
-                ))  # total length: 28
+                ))
 
                 data["features"].append(feature_vector.tolist())
                 data["labels"].append(i)
 
+    # Convert extracted data to a pandas DataFrame
+    print("\nConverting data to pandas DataFrame...")
+    features_df = pd.DataFrame(data["features"])
+    features_df["genre_label"] = data["labels"]
+    print("DataFrame created successfully. Here are the first 5 rows:")
+    print(features_df.head())
+
+    # Save raw dictionary data to JSON
     with open(json_path, "w", encoding="utf-8") as fp:
         json.dump(data, fp, indent=4)
 
     print(f"\nFeature extraction complete. Saved to: {json_path}")
     print(f"Total samples: {len(data['labels'])}")
 
+    return features_df
+
 
 if __name__ == "__main__":
     dataset_path = resolve_dataset_path()
     print(f"Using dataset path: {dataset_path}")
-    process_dataset(dataset_path, JSON_PATH)
+    df = process_dataset(dataset_path, JSON_PATH)
