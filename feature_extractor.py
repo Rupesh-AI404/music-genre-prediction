@@ -1,60 +1,57 @@
 import os
-import json
 import librosa
 import numpy as np
 import pandas as pd
+
+# Define the path to the dataset
+DATASET_PATH = "genres_original"
+
+# Define output CSV path
+CSV_PATH = "features.csv"
 
 # Audio processing constants
 SAMPLE_RATE = 22050
 TRACK_DURATION_SECONDS = 30
 NUM_SEGMENTS = 10
+
+# Feature extraction constants
 NUM_MFCC = 13
 N_FFT = 2048
 HOP_LENGTH = 512
 
 SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Try common dataset folder names
-DATASET_CANDIDATES = [
-    os.path.join(SCRIPT_DIR, "genres_original"),
-    os.path.join(SCRIPT_DIR, "GTZAN music genre dataset", "genres"),
-]
-
-JSON_PATH = os.path.join(SCRIPT_DIR, "data.json")
-VALID_EXTENSIONS = (".wav", ".au")
 
 
-def resolve_dataset_path():
-    for path in DATASET_CANDIDATES:
-        if os.path.isdir(path):
-            return path
-    raise FileNotFoundError(
-        "Dataset folder not found.\n"
-        "Expected one of:\n"
-        + "\n".join(f"- {p}" for p in DATASET_CANDIDATES)
-    )
+def process_dataset(dataset_path, csv_path):
+    """
+    Extract features from audio files and save them as a CSV dataset.
+    """
+    if not os.path.isdir(dataset_path):
+        raise FileNotFoundError(
+            f"Dataset path not found: {dataset_path}\n"
+            "Make sure your dataset folder exists and the path is correct."
+        )
 
-
-def process_dataset(dataset_path, json_path):
     data = {
         "mapping": [],
-        "features": [],
-        "labels": []
+        "labels": [],
+        "features": []
     }
 
+    print("Starting feature extraction...")
     num_samples_per_segment = int(SAMPLES_PER_TRACK / NUM_SEGMENTS)
 
     for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
         genre_path = os.path.join(dataset_path, genre_folder)
+
         if not os.path.isdir(genre_path):
             continue
 
         data["mapping"].append(genre_folder)
-        print(f"\nProcessing: {genre_folder}")
+        print(f"\nProcessing genre: {genre_folder}")
 
         for filename in sorted(os.listdir(genre_path)):
-            if not filename.lower().endswith(VALID_EXTENSIONS):
+            if not filename.lower().endswith((".wav", ".au")):
                 continue
 
             file_path = os.path.join(genre_path, filename)
@@ -62,11 +59,10 @@ def process_dataset(dataset_path, json_path):
             try:
                 signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
             except Exception as e:
-                print(f"Could not load {file_path}: {e}")
+                print(f"Error loading file {file_path}: {e}")
                 continue
 
             if len(signal) < SAMPLES_PER_TRACK:
-                print(f"Skipping short file: {file_path}")
                 continue
 
             signal = signal[:SAMPLES_PER_TRACK]
@@ -76,7 +72,7 @@ def process_dataset(dataset_path, json_path):
                 end_sample = start_sample + num_samples_per_segment
                 segment = signal[start_sample:end_sample]
 
-                # Extract all features and aggregate over time
+                # Extract and aggregate features
                 mfccs_processed = np.mean(
                     librosa.feature.mfcc(
                         y=segment,
@@ -135,24 +131,17 @@ def process_dataset(dataset_path, json_path):
                 data["features"].append(feature_vector.tolist())
                 data["labels"].append(i)
 
-    # Convert extracted data to a pandas DataFrame
+    # Convert to DataFrame
     print("\nConverting data to pandas DataFrame...")
     features_df = pd.DataFrame(data["features"])
     features_df["genre_label"] = data["labels"]
-    print("DataFrame created successfully. Here are the first 5 rows:")
-    print(features_df.head())
 
-    # Save raw dictionary data to JSON
-    with open(json_path, "w", encoding="utf-8") as fp:
-        json.dump(data, fp, indent=4)
+    # Save to CSV
+    print(f"Saving DataFrame to {csv_path}...")
+    features_df.to_csv(csv_path, index=False)
 
-    print(f"\nFeature extraction complete. Saved to: {json_path}")
-    print(f"Total samples: {len(data['labels'])}")
-
-    return features_df
+    print("\nFeature extraction complete. The file 'features.csv' has been created.")
 
 
 if __name__ == "__main__":
-    dataset_path = resolve_dataset_path()
-    print(f"Using dataset path: {dataset_path}")
-    df = process_dataset(dataset_path, JSON_PATH)
+    process_dataset(DATASET_PATH, CSV_PATH)
