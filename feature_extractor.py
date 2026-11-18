@@ -40,6 +40,7 @@ def process_dataset(dataset_path, json_path):
         "mapping": [],
         "mfcc": [],
         "chroma": [],
+        "spectral_centroid": [],
         "labels": []
     }
 
@@ -78,14 +79,14 @@ def process_dataset(dataset_path, json_path):
                 segment = signal[start_sample:end_sample]
 
                 # MFCCs -> aggregate over time
-                mfcc = librosa.feature.mfcc(
+                mfccs = librosa.feature.mfcc(
                     y=segment,
                     sr=sr,
                     n_mfcc=NUM_MFCC,
                     n_fft=N_FFT,
                     hop_length=HOP_LENGTH
                 )
-                mfcc_processed = np.mean(mfcc, axis=1)
+                mfccs_processed = np.mean(mfccs, axis=1)
 
                 # Chroma -> aggregate over time
                 chroma = librosa.feature.chroma_stft(
@@ -96,8 +97,18 @@ def process_dataset(dataset_path, json_path):
                 )
                 chroma_processed = np.mean(chroma, axis=1)
 
-                data["mfcc"].append(mfcc_processed.tolist())
+                # Spectral Centroid -> aggregate over time
+                spectral_centroid = librosa.feature.spectral_centroid(
+                    y=segment,
+                    sr=sr,
+                    n_fft=N_FFT,
+                    hop_length=HOP_LENGTH
+                )
+                spectral_centroid_processed = float(np.mean(spectral_centroid))
+
+                data["mfcc"].append(mfccs_processed.tolist())
                 data["chroma"].append(chroma_processed.tolist())
+                data["spectral_centroid"].append(spectral_centroid_processed)
                 data["labels"].append(i)
 
     with open(json_path, "w", encoding="utf-8") as fp:
