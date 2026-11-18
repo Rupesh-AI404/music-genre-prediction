@@ -1,80 +1,104 @@
-# Import necessary libraries
 import os
 import json
 import librosa
-import numpy as np  # Add this import
+import numpy as np
 
-
-# Define the path to the dataset
-DATASET_PATH = "GTZAN music genre dataset/genres"
-
-# Define the path where the processed data (features) will be saved
-JSON_PATH = "data.json"
-
-# Define constants for audio processing
+# Audio processing constants
 SAMPLE_RATE = 22050
 TRACK_DURATION_SECONDS = 30
 NUM_SEGMENTS = 10
+NUM_MFCC = 13
+N_FFT = 2048
+HOP_LENGTH = 512
 
-# --- ADD THIS NEW BLOCK OF CONSTANTS ---
-# Define constants for MFCC extraction
-NUM_MFCC = 13  # Number of MFCC coefficients to extract
-N_FFT = 2048  # Window size for FFT
-HOP_LENGTH = 512  # Number of samples to slide the FFT window
-# ----------------------------------------
-
-# Calculate the number of audio samples we expect per 30-second track
 SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Try common dataset folder names
+DATASET_CANDIDATES = [
+    os.path.join(SCRIPT_DIR, "genres_original"),
+    os.path.join(SCRIPT_DIR, "GTZAN music genre dataset", "genres"),
+]
+
+JSON_PATH = os.path.join(SCRIPT_DIR, "data.json")
+VALID_EXTENSIONS = (".wav", ".au")
+
+
+def resolve_dataset_path():
+    for path in DATASET_CANDIDATES:
+        if os.path.isdir(path):
+            return path
+    raise FileNotFoundError(
+        "Dataset folder not found.\n"
+        "Expected one of:\n"
+        + "\n".join(f"- {p}" for p in DATASET_CANDIDATES)
+    )
 
 
 def process_dataset(dataset_path, json_path):
-    # ... (the data dictionary remains the same)
+    data = {
+        "mapping": [],
+        "mfcc": [],
+        "labels": []
+    }
+
+    num_samples_per_segment = int(SAMPLES_PER_TRACK / NUM_SEGMENTS)
 
     for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
-        # ... (the outer loop remains the same)
-        if os.path.isdir(DATASET_PATH):
-            # ... (the inner loop starts)
-            for filename in sorted(os.listdir(DATASET_PATH)):
-                if filename.endswith(".wav"):
-                    file_path = os.path.join(DATASET_PATH, filename)
+        genre_path = os.path.join(dataset_path, genre_folder)
 
-                    try:
-                        signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
+        if not os.path.isdir(genre_path):
+            continue
 
-                        if len(signal) >= SAMPLES_PER_TRACK:
-                            num_samples_per_segment = int(SAMPLES_PER_TRACK / NUM_SEGMENTS)
+        data["mapping"].append(genre_folder)
+        print(f"\nProcessing: {genre_folder}")
 
-                            for s in range(NUM_SEGMENTS):
-                                start_sample = s * num_samples_per_segment
-                                end_sample = start_sample + num_samples_per_segment
-                                segment = signal[start_sample:end_sample]
+        for filename in sorted(os.listdir(genre_path)):
+            if not filename.lower().endswith(VALID_EXTENSIONS):
+                continue
 
-                                # --- THIS IS THE NEW CODE BLOCK TO ADD ---
-                                # Extract MFCCs from the segment.
-                                # The result 'mfccs' is a 2D NumPy array.
-                                mfccs = librosa.feature.mfcc(y=segment,
-                                                             sr=sr,
-                                                             n_mfcc=NUM_MFCC,
-                                                             n_fft=N_FFT,
-                                                             hop_length=HOP_LENGTH,)
+            file_path = os.path.join(genre_path, filename)
 
-                                # To get a single feature vector that summarizes the segment,
-                                # we aggregate the MFCCs over the time frames by taking the mean.
-                                # The shape of mfccs is (NUM_MFCC, num_frames), so we take the mean
-                                # along axis=1 (the time axis).
-                                mfccs_processed = np.mean(mfccs, axis=1)
+            try:
+                signal, sr = librosa.load(file_path, sr=SAMPLE_RATE)
+            except Exception as e:
+                print(f"Could not load {file_path}: {e}")
+                continue
 
-                                # In later steps, we will combine this 'mfccs_processed' vector
-                                # with other features and store it.
-                                # --- END OF THE NEW CODE BLOCK ---
+            if len(signal) < SAMPLES_PER_TRACK:
+                print(f"Skipping short file: {file_path}")
+                continue
 
-                    except Exception as e:
-                        print(f"Error loading file {file_path}: {e}")
-                        continue
-    # ... (rest of the code)
+            # Use exactly 30s
+            signal = signal[:SAMPLES_PER_TRACK]
 
-    print("\nFeature extraction complete.")
+            for s in range(NUM_SEGMENTS):
+                start_sample = s * num_samples_per_segment
+                end_sample = start_sample + num_samples_per_segment
+                segment = signal[start_sample:end_sample]
+
+                mfcc = librosa.feature.mfcc(
+                    y=segment,
+                    sr=sr,
+                    n_mfcc=NUM_MFCC,
+                    n_fft=N_FFT,
+                    hop_length=HOP_LENGTH
+                )
+
+                # (NUM_MFCC, frames) -> (NUM_MFCC,)
+                mfcc_processed = np.mean(mfcc, axis=1)
+
+                data["mfcc"].append(mfcc_processed.tolist())
+                data["labels"].append(i)
+
+    with open(json_path, "w", encoding="utf-8") as fp:
+        json.dump(data, fp, indent=4)
+
+    print(f"\nFeature extraction complete. Saved to: {json_path}")
+    print(f"Total samples: {len(data['mfcc'])}")
 
 
 if __name__ == "__main__":
-    process_dataset(DATASET_PATH, JSON_PATH)
+    dataset_path = resolve_dataset_path()
+    print(f"Using dataset path: {dataset_path}")
+    process_dataset(dataset_path, JSON_PATH)
