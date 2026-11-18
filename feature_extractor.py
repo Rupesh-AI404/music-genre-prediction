@@ -3,11 +3,15 @@ import librosa
 import numpy as np
 import pandas as pd
 
-# Define the path to the dataset
-DATASET_PATH = "genres_original"
+# Output CSV path
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(SCRIPT_DIR, "features.csv")
 
-# Define output CSV path
-CSV_PATH = "features.csv"
+# Try common dataset folder names
+DATASET_CANDIDATES = [
+    os.path.join(SCRIPT_DIR, "genres_original"),
+    os.path.join(SCRIPT_DIR, "GTZAN music genre dataset", "genres"),
+]
 
 # Audio processing constants
 SAMPLE_RATE = 22050
@@ -22,16 +26,18 @@ HOP_LENGTH = 512
 SAMPLES_PER_TRACK = SAMPLE_RATE * TRACK_DURATION_SECONDS
 
 
-def process_dataset(dataset_path, csv_path):
-    """
-    Extract features from audio files and save them as a CSV dataset.
-    """
-    if not os.path.isdir(dataset_path):
-        raise FileNotFoundError(
-            f"Dataset path not found: {dataset_path}\n"
-            "Make sure your dataset folder exists and the path is correct."
-        )
+def resolve_dataset_path():
+    for path in DATASET_CANDIDATES:
+        if os.path.isdir(path):
+            return path
+    raise FileNotFoundError(
+        "Dataset folder not found.\n"
+        "Expected one of:\n"
+        + "\n".join(f"- {p}" for p in DATASET_CANDIDATES)
+    )
 
+
+def process_dataset(dataset_path, csv_path):
     data = {
         "mapping": [],
         "labels": [],
@@ -72,7 +78,6 @@ def process_dataset(dataset_path, csv_path):
                 end_sample = start_sample + num_samples_per_segment
                 segment = signal[start_sample:end_sample]
 
-                # Extract and aggregate features
                 mfccs_processed = np.mean(
                     librosa.feature.mfcc(
                         y=segment,
@@ -119,7 +124,6 @@ def process_dataset(dataset_path, csv_path):
                     )
                 ))
 
-                # Combine into one feature vector
                 feature_vector = np.hstack((
                     mfccs_processed,
                     chroma_processed,
@@ -131,12 +135,10 @@ def process_dataset(dataset_path, csv_path):
                 data["features"].append(feature_vector.tolist())
                 data["labels"].append(i)
 
-    # Convert to DataFrame
     print("\nConverting data to pandas DataFrame...")
     features_df = pd.DataFrame(data["features"])
     features_df["genre_label"] = data["labels"]
 
-    # Save to CSV
     print(f"Saving DataFrame to {csv_path}...")
     features_df.to_csv(csv_path, index=False)
 
@@ -144,4 +146,6 @@ def process_dataset(dataset_path, csv_path):
 
 
 if __name__ == "__main__":
-    process_dataset(DATASET_PATH, CSV_PATH)
+    dataset_path = resolve_dataset_path()
+    print(f"Using dataset path: {dataset_path}")
+    process_dataset(dataset_path, CSV_PATH)
