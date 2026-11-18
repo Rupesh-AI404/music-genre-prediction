@@ -41,6 +41,8 @@ def process_dataset(dataset_path, json_path):
         "mfcc": [],
         "chroma": [],
         "spectral_centroid": [],
+        "spectral_rolloff": [],
+        "zcr": [],
         "labels": []
     }
 
@@ -48,7 +50,6 @@ def process_dataset(dataset_path, json_path):
 
     for i, genre_folder in enumerate(sorted(os.listdir(dataset_path))):
         genre_path = os.path.join(dataset_path, genre_folder)
-
         if not os.path.isdir(genre_path):
             continue
 
@@ -78,37 +79,62 @@ def process_dataset(dataset_path, json_path):
                 end_sample = start_sample + num_samples_per_segment
                 segment = signal[start_sample:end_sample]
 
-                # MFCCs -> aggregate over time
-                mfccs = librosa.feature.mfcc(
-                    y=segment,
-                    sr=sr,
-                    n_mfcc=NUM_MFCC,
-                    n_fft=N_FFT,
-                    hop_length=HOP_LENGTH
+                # Extract MFCCs
+                mfccs_processed = np.mean(
+                    librosa.feature.mfcc(
+                        y=segment,
+                        sr=sr,
+                        n_mfcc=NUM_MFCC,
+                        n_fft=N_FFT,
+                        hop_length=HOP_LENGTH
+                    ),
+                    axis=1
                 )
-                mfccs_processed = np.mean(mfccs, axis=1)
 
-                # Chroma -> aggregate over time
-                chroma = librosa.feature.chroma_stft(
-                    y=segment,
-                    sr=sr,
-                    n_fft=N_FFT,
-                    hop_length=HOP_LENGTH
+                # Extract Chroma Features
+                chroma_processed = np.mean(
+                    librosa.feature.chroma_stft(
+                        y=segment,
+                        sr=sr,
+                        n_fft=N_FFT,
+                        hop_length=HOP_LENGTH
+                    ),
+                    axis=1
                 )
-                chroma_processed = np.mean(chroma, axis=1)
 
-                # Spectral Centroid -> aggregate over time
-                spectral_centroid = librosa.feature.spectral_centroid(
-                    y=segment,
-                    sr=sr,
-                    n_fft=N_FFT,
-                    hop_length=HOP_LENGTH
-                )
-                spectral_centroid_processed = float(np.mean(spectral_centroid))
+                # Extract Spectral Centroid
+                spectral_centroid_processed = float(np.mean(
+                    librosa.feature.spectral_centroid(
+                        y=segment,
+                        sr=sr,
+                        n_fft=N_FFT,
+                        hop_length=HOP_LENGTH
+                    )
+                ))
+
+                # Extract Spectral Rolloff
+                spectral_rolloff_processed = float(np.mean(
+                    librosa.feature.spectral_rolloff(
+                        y=segment,
+                        sr=sr,
+                        n_fft=N_FFT,
+                        hop_length=HOP_LENGTH
+                    )
+                ))
+
+                # Extract Zero-Crossing Rate
+                zcr_processed = float(np.mean(
+                    librosa.feature.zero_crossing_rate(
+                        y=segment,
+                        hop_length=HOP_LENGTH
+                    )
+                ))
 
                 data["mfcc"].append(mfccs_processed.tolist())
                 data["chroma"].append(chroma_processed.tolist())
                 data["spectral_centroid"].append(spectral_centroid_processed)
+                data["spectral_rolloff"].append(spectral_rolloff_processed)
+                data["zcr"].append(zcr_processed)
                 data["labels"].append(i)
 
     with open(json_path, "w", encoding="utf-8") as fp:
