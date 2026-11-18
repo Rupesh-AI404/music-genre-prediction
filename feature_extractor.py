@@ -39,6 +39,7 @@ def process_dataset(dataset_path, json_path):
     data = {
         "mapping": [],
         "mfcc": [],
+        "chroma": [],
         "labels": []
     }
 
@@ -69,7 +70,6 @@ def process_dataset(dataset_path, json_path):
                 print(f"Skipping short file: {file_path}")
                 continue
 
-            # Use exactly 30s
             signal = signal[:SAMPLES_PER_TRACK]
 
             for s in range(NUM_SEGMENTS):
@@ -77,6 +77,7 @@ def process_dataset(dataset_path, json_path):
                 end_sample = start_sample + num_samples_per_segment
                 segment = signal[start_sample:end_sample]
 
+                # MFCCs -> aggregate over time
                 mfcc = librosa.feature.mfcc(
                     y=segment,
                     sr=sr,
@@ -84,18 +85,26 @@ def process_dataset(dataset_path, json_path):
                     n_fft=N_FFT,
                     hop_length=HOP_LENGTH
                 )
-
-                # (NUM_MFCC, frames) -> (NUM_MFCC,)
                 mfcc_processed = np.mean(mfcc, axis=1)
 
+                # Chroma -> aggregate over time
+                chroma = librosa.feature.chroma_stft(
+                    y=segment,
+                    sr=sr,
+                    n_fft=N_FFT,
+                    hop_length=HOP_LENGTH
+                )
+                chroma_processed = np.mean(chroma, axis=1)
+
                 data["mfcc"].append(mfcc_processed.tolist())
+                data["chroma"].append(chroma_processed.tolist())
                 data["labels"].append(i)
 
     with open(json_path, "w", encoding="utf-8") as fp:
         json.dump(data, fp, indent=4)
 
     print(f"\nFeature extraction complete. Saved to: {json_path}")
-    print(f"Total samples: {len(data['mfcc'])}")
+    print(f"Total samples: {len(data['labels'])}")
 
 
 if __name__ == "__main__":
