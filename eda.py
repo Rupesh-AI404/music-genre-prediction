@@ -14,16 +14,41 @@ try:
     # store in a variable, conventionally named 'df' or a more descriptive name.
     features_df = pd.read_csv(CSV_PATH)
 
-    # --- Verification Step ---
-    # To confirm that the data has been loaded correctly, let's print a success
-    # message and display the first few rows of the DataFrame.
     print("DataFrame loaded successfully!")
 
-    # The .head() method is an essential first check. By default, it displays
-    # the first 5 rows of the DataFrame, giving us an immediate snapshot
-    # of our data's structure and content.
-    print("\nFirst 5 rows of the dataset:")
-    print(features_df.head())
+    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
+    # Get the structural summary of the DataFrame using .info()
+    print("\n--- DataFrame Info ---")
+    # We call the .info() method directly on our DataFrame.
+    # It prints the summary to the console automatically.
+    features_df.info()
+
+    # Get the statistical summary of the DataFrame using .describe()
+    print("\n--- DataFrame Statistical Summary ---")
+    # We call the .describe() method, which returns a new DataFrame containing
+    # the statistics. Printing this gives us a clean, tabular view.
+    print(features_df.describe())
+
+    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
+    # Explicitly check for missing values using .isnull() and .sum()
+    print("\n--- Missing Values Check ---")
+    missing_values_count = features_df.isnull().sum()
+
+    print("Number of missing values per column:")
+    print(missing_values_count)
+
+    # Based on the check, we can make a statement.
+    if missing_values_count.sum() == 0:
+        print("\nConclusion: The dataset has no missing values. No handling is required.")
+    else:
+        print("\nConclusion: The dataset contains missing values. Handling is required.")
+        # In a real-world scenario, the handling logic would go here.
+
+    # --- END OF THE NEW CODE BLOCK ---
+
+    # --- END OF THE NEW CODE BLOCK ---
 
 except FileNotFoundError:
     print(f"Error: The file at '{CSV_PATH}' was not found.")
