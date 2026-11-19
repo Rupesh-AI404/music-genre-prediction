@@ -10,6 +10,8 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 # Import the accuracy metric for evaluation
 from sklearn.metrics import accuracy_score
+# Import joblib for saving our models and scaler
+import joblib
 # Import LabelEncoder and numpy for previous steps
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -38,42 +40,43 @@ try:
     X_test_scaled = scaler.transform(X_test)
     print("\nFeatures have been scaled.")
 
-    # --- Training Models (from previous tasks, code omitted for brevity) ---
-    # Logistic Regression
+    # --- Training Models (code omitted for brevity) ---
     print("\n--- Training Logistic Regression Model ---")
     log_reg = LogisticRegression(max_iter=1000).fit(X_train_scaled, y_train)
     print("Logistic Regression model trained successfully!")
-    # SVM
+
     print("\n--- Training Support Vector Machine (SVM) Model ---")
     svm_model = SVC(probability=True, random_state=42).fit(X_train_scaled, y_train)
     print("Support Vector Machine model trained successfully!")
-    # Random Forest
+
     print("\n--- Training Random Forest Classifier Model ---")
     rf_model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1).fit(X_train_scaled, y_train)
     print("Random Forest Classifier model trained successfully!")
 
+    # --- Evaluating Models (from previous task, code omitted for brevity) ---
+    print("\n--- Evaluating Models on the Test Set ---")
+    print(f"Logistic Regression Accuracy: {log_reg.score(X_test_scaled, y_test) * 100:.2f}%")
+    print(f"Support Vector Machine Accuracy: {svm_model.score(X_test_scaled, y_test) * 100:.2f}%")
+    print(f"Random Forest Classifier Accuracy: {rf_model.score(X_test_scaled, y_test) * 100:.2f}%")
+
     # --- THIS IS THE NEW CODE BLOCK TO ADD ---
 
-    # Make predictions on the test set and calculate accuracy for each model
-    print("\n--- Evaluating Models on the Test Set ---")
+    # Save the trained models and the scaler for later use
+    print("\n--- Saving Models and Scaler to Disk ---")
 
-    # 1. Logistic Regression
-    # Use the trained model to predict labels for the unseen test data
-    y_pred_log_reg = log_reg.predict(X_test_scaled)
-    # Compare the predicted labels with the true labels to calculate accuracy
-    accuracy_log_reg = accuracy_score(y_test, y_pred_log_reg)
-    print(f"Logistic Regression Accuracy: {accuracy_log_reg * 100:.2f}%")
+    # The first argument is the Python object to save.
+    # The second argument is the desired filename.
+    joblib.dump(scaler, 'scaler.joblib')
+    joblib.dump(log_reg, 'logistic_regression_model.joblib')
+    joblib.dump(svm_model, 'svm_model.joblib')
+    joblib.dump(rf_model, 'random_forest_model.joblib')
 
-    # 2. Support Vector Machine
-    y_pred_svm = svm_model.predict(X_test_scaled)
-    accuracy_svm = accuracy_score(y_test, y_pred_svm)
-    print(f"Support Vector Machine Accuracy: {accuracy_svm * 100:.2f}%")
-
-    # 3. Random Forest Classifier
-    # An alternative and more concise way to get accuracy is the .score() method,
-    # which performs prediction and scoring in one step.
-    accuracy_rf = rf_model.score(X_test_scaled, y_test)
-    print(f"Random Forest Classifier Accuracy: {accuracy_rf * 100:.2f}%")
+    print("Scaler and models have been successfully saved to disk.")
+    print("The following files have been created in your project directory:")
+    print("- scaler.joblib")
+    print("- logistic_regression_model.joblib")
+    print("- svm_model.joblib")
+    print("- random_forest_model.joblib")
 
     # --- END OF THE NEW CODE BLOCK ---
 
