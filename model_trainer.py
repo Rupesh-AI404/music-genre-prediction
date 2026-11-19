@@ -4,6 +4,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 # Import the StandardScaler for feature scaling
 from sklearn.preprocessing import StandardScaler
+# Import the Logistic Regression model
+from sklearn.linear_model import LogisticRegression
 # Import LabelEncoder and numpy for previous steps
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -28,34 +30,34 @@ try:
         X, y, test_size=0.25, random_state=42, stratify=y
     )
 
-    # --- Fitting the StandardScaler (from previous task) ---
-    print("\n--- Scaling Features ---")
+    # --- Scaling Features (from previous tasks) ---
     scaler = StandardScaler()
     scaler.fit(X_train)
-    print("StandardScaler has been fitted to the training data.")
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    print("\nFeatures have been scaled.")
 
     # --- THIS IS THE NEW CODE BLOCK TO ADD ---
 
-    # 3. Apply the fitted scaler to transform both the training and testing data.
-    # The .transform() method uses the learned parameters (mean and std from X_train)
-    # to scale the data.
-    # The output is a NumPy array, not a pandas DataFrame.
-    X_train_scaled = scaler.transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    # Initialize and train a Logistic Regression model
+    print("\n--- Training Logistic Regression Model ---")
+
+    # 1. Initialize the model
+    # We set 'max_iter' to a higher value to ensure the model has enough iterations
+    # to converge on a solution, which helps avoid convergence warnings.
+    log_reg = LogisticRegression(max_iter=1000)
+
+    # 2. Train the model using the .fit() method
+    # The model learns the relationship between our scaled training features (X_train_scaled)
+    # and the corresponding genre labels (y_train).
+    log_reg.fit(X_train_scaled, y_train)
 
     # --- Verification Step ---
-    # Let's check the properties of the newly scaled data to confirm the transformation.
-    print("\nVerification of scaled data:")
+    print("Logistic Regression model trained successfully!")
 
-    # The mean of each feature in the scaled training data should be very close to 0.
-    print(f"Mean of first 5 features in X_train_scaled: {X_train_scaled[:, :5].mean(axis=0)}")
-
-    # The standard deviation of each feature in the scaled training data should be very close to 1.
-    print(f"Standard deviation of first 5 features in X_train_scaled: {X_train_scaled[:, :5].std(axis=0)}")
-
-    # Note: The mean and std of X_test_scaled will NOT be exactly 0 and 1,
-    # because it was scaled using the parameters from X_train. This is correct!
-    print(f"\nMean of first 5 features in X_test_scaled: {X_test_scaled[:, :5].mean(axis=0)}")
+    # The trained model now contains learned parameters. For example, we can see the 10
+    # classes it has learned to identify.
+    print(f"Model learned the following classes: {log_reg.classes_}")
 
     # --- END OF THE NEW CODE BLOCK ---
 
