@@ -79,6 +79,46 @@ try:
     plt.tight_layout()
     plt.show()
 
+    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
+    # Compute the correlation matrix for all numerical features in the DataFrame.
+    print("\\n--- Computing Correlation Matrix ---")
+
+    # The .corr() method calculates the pairwise correlation of columns, excluding NA/null values.
+    # It returns a new DataFrame representing the matrix.
+    correlation_matrix = features_df.corr()
+
+    print("Correlation matrix computed successfully.")
+
+    # Displaying the top of the correlation matrix to get a feel for it.
+    # A full 29x29 matrix is too large to display effectively in the console.
+    print("Top 5 rows of the correlation matrix:")
+    print(correlation_matrix.head())
+
+    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
+    # Visualize the correlation matrix as a heatmap
+    print("\n--- Generating Heatmap of Feature Correlations ---")
+
+    # Set up the matplotlib figure
+    # A larger figure size is needed to make the heatmap readable.
+    plt.figure(figsize=(18, 15))
+
+    # Create the heatmap using Seaborn
+    # cmap='coolwarm': This is a "diverging" colormap, ideal for correlation matrices.
+    #   Positive correlations will be warm (red), negative will be cool (blue),
+    #   and correlations near zero will be neutral.
+    # annot=False: For a large matrix like this, annotating each cell with its
+    #   value would make the plot unreadable. We leave it false.
+    sns.heatmap(correlation_matrix, cmap='coolwarm', annot=False)
+
+    # Set the plot title
+    plt.title('Correlation Matrix of Music Features', fontsize=20)
+
+    # Display the plot
+    plt.tight_layout()
+    plt.show()
+
     # --- END OF THE NEW CODE BLOCK ---
 
 except FileNotFoundError:
