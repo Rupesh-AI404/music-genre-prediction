@@ -1,10 +1,11 @@
 # Import the pandas library for data manipulation
 import pandas as pd
-# Import LabelEncoder from scikit-learn for educational purposes
-from sklearn.preprocessing import LabelEncoder
 # Import the function for splitting data into train and test sets
 from sklearn.model_selection import train_test_split
-# Import the numpy library to check data types
+# Import the StandardScaler for feature scaling
+from sklearn.preprocessing import StandardScaler
+# Import LabelEncoder and numpy for previous steps
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
 # Define the path to our dataset
@@ -20,34 +21,41 @@ try:
     y = features_df['genre_label']
 
     # --- Label Encoding Verification (from previous task) ---
-    print("\n--- Label Encoding Step ---")
-    if np.issubdtype(y.dtype, np.integer):
-        print("Labels are already numerically encoded. No action needed.")
-    else:
-        print("Labels are not numerical. Applying LabelEncoder.")
-        # ... (commented-out LabelEncoder code)
+    # (code omitted for brevity)
 
-    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
-
-    # Split the data into training and testing sets
-    print("\n--- Splitting Data into Training and Testing Sets ---")
-
-    # We use train_test_split to partition our data.
-    # test_size=0.25 means 25% of the data will be used for testing.
-    # random_state=42 ensures that the split is the same every time we run the script,
-    # which is crucial for reproducibility.
-    # stratify=y ensures that the class distribution in the train and test sets
-    # is the same as the original dataset.
+    # --- Splitting Data (from previous task) ---
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42, stratify=y
     )
 
+    # --- Fitting the StandardScaler (from previous task) ---
+    print("\n--- Scaling Features ---")
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    print("StandardScaler has been fitted to the training data.")
+
+    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
+    # 3. Apply the fitted scaler to transform both the training and testing data.
+    # The .transform() method uses the learned parameters (mean and std from X_train)
+    # to scale the data.
+    # The output is a NumPy array, not a pandas DataFrame.
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
     # --- Verification Step ---
-    print("\nVerifying the shapes of the new sets:")
-    print(f"Shape of X_train: {X_train.shape}")  # Should be (7500, 28)
-    print(f"Shape of X_test: {X_test.shape}")  # Should be (2500, 28)
-    print(f"Shape of y_train: {y_train.shape}")  # Should be (7500,)
-    print(f"Shape of y_test: {y_test.shape}")  # Should be (2500,)
+    # Let's check the properties of the newly scaled data to confirm the transformation.
+    print("\nVerification of scaled data:")
+
+    # The mean of each feature in the scaled training data should be very close to 0.
+    print(f"Mean of first 5 features in X_train_scaled: {X_train_scaled[:, :5].mean(axis=0)}")
+
+    # The standard deviation of each feature in the scaled training data should be very close to 1.
+    print(f"Standard deviation of first 5 features in X_train_scaled: {X_train_scaled[:, :5].std(axis=0)}")
+
+    # Note: The mean and std of X_test_scaled will NOT be exactly 0 and 1,
+    # because it was scaled using the parameters from X_train. This is correct!
+    print(f"\nMean of first 5 features in X_test_scaled: {X_test_scaled[:, :5].mean(axis=0)}")
 
     # --- END OF THE NEW CODE BLOCK ---
 
