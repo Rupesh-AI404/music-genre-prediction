@@ -1,52 +1,60 @@
 # Import the pandas library, the cornerstone of our data analysis toolkit.
-# We use the conventional alias 'pd' for brevity and readability.
 import pandas as pd
+# Import our visualization libraries
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Define a constant for the path to our dataset file.
-# This makes the script cleaner and easier to modify if the file name changes.
 CSV_PATH = "features.csv"
 
 # It's a good practice to wrap file operations in a try-except block.
-# This handles potential errors gracefully, such as if the file is not found.
 try:
     # Use the pd.read_csv() function to load the dataset.
-    # The function reads the file and returns a pandas DataFrame, which we
-    # store in a variable, conventionally named 'df' or a more descriptive name.
     features_df = pd.read_csv(CSV_PATH)
 
     print("DataFrame loaded successfully!")
 
-    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
-
-    # Get the structural summary of the DataFrame using .info()
+    # --- Structural and Statistical Summaries (from previous tasks) ---
     print("\n--- DataFrame Info ---")
-    # We call the .info() method directly on our DataFrame.
-    # It prints the summary to the console automatically.
     features_df.info()
 
-    # Get the statistical summary of the DataFrame using .describe()
     print("\n--- DataFrame Statistical Summary ---")
-    # We call the .describe() method, which returns a new DataFrame containing
-    # the statistics. Printing this gives us a clean, tabular view.
     print(features_df.describe())
+
+    print("\n--- Missing Values Check ---")
+    if features_df.isnull().sum().sum() == 0:
+        print("Conclusion: The dataset has no missing values.")
+    else:
+        print("Conclusion: The dataset contains missing values.")
 
     # --- THIS IS THE NEW CODE BLOCK TO ADD ---
 
-    # Explicitly check for missing values using .isnull() and .sum()
-    print("\n--- Missing Values Check ---")
-    missing_values_count = features_df.isnull().sum()
+    # Create a list of genre names in the correct order of their labels (0-9)
+    # This order is determined by the alphabetical sorting in feature_extractor.py
+    genre_names = [
+        'blues', 'classical', 'country', 'disco', 'hiphop',
+        'jazz', 'metal', 'pop', 'reggae', 'rock'
+    ]
 
-    print("Number of missing values per column:")
-    print(missing_values_count)
+    # Set up the plot style
+    sns.set_style("whitegrid")
+    plt.figure(figsize=(12, 6))
 
-    # Based on the check, we can make a statement.
-    if missing_values_count.sum() == 0:
-        print("\nConclusion: The dataset has no missing values. No handling is required.")
-    else:
-        print("\nConclusion: The dataset contains missing values. Handling is required.")
-        # In a real-world scenario, the handling logic would go here.
+    # Create the count plot
+    ax = sns.countplot(x='genre_label', data=features_df, palette='viridis')
 
-    # --- END OF THE NEW CODE BLOCK ---
+    # Set the plot title and labels
+    ax.set_title('Distribution of Music Genres in the Dataset', fontsize=16)
+    ax.set_xlabel('Genre', fontsize=12)
+    ax.set_ylabel('Number of Segments', fontsize=12)
+
+    # Set the x-axis tick labels to be the actual genre names
+    # We rotate them slightly for better readability if they overlap
+    ax.set_xticklabels(genre_names, rotation=30)
+
+    # Display the plot
+    plt.tight_layout()
+    plt.show()
 
     # --- END OF THE NEW CODE BLOCK ---
 
