@@ -95,7 +95,6 @@ try:
     print("Top 5 rows of the correlation matrix:")
     print(correlation_matrix.head())
 
-    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
 
     # Visualize the correlation matrix as a heatmap
     print("\n--- Generating Heatmap of Feature Correlations ---")
@@ -119,7 +118,6 @@ try:
     plt.tight_layout()
     plt.show()
 
-    # --- END OF THE NEW CODE BLOCK ---
 
 except FileNotFoundError:
     print(f"Error: The file at '{CSV_PATH}' was not found.")
