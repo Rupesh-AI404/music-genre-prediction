@@ -29,7 +29,6 @@ try:
     plt.tight_layout()
     plt.show()
 
-    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
 
     # Create box plots to compare the distribution of Spectral Centroid across genres.
     print("\n--- Generating Box Plot for Spectral Centroid ---")
@@ -79,7 +78,6 @@ try:
     plt.tight_layout()
     plt.show()
 
-    # --- THIS IS THE NEW CODE BLOCK TO ADD ---
 
     # Compute the correlation matrix for all numerical features in the DataFrame.
     print("\\n--- Computing Correlation Matrix ---")
