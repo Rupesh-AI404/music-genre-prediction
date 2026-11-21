@@ -59,7 +59,6 @@ try:
     print(f"Support Vector Machine Accuracy: {svm_model.score(X_test_scaled, y_test) * 100:.2f}%")
     print(f"Random Forest Classifier Accuracy: {rf_model.score(X_test_scaled, y_test) * 100:.2f}%")
 
-
     # Save the trained models and the scaler for later use
     print("\n--- Saving Models and Scaler to Disk ---")
 
