@@ -77,8 +77,6 @@ try:
     print("- svm_model.joblib")
     print("- random_forest_model.joblib")
 
-
-
 except FileNotFoundError:
     print(f"Error: The file at '{CSV_PATH}' was not found.")
     print("Please ensure 'features.csv' is in the same directory.")
