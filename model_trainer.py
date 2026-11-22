@@ -8,6 +8,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report, confusion_matrix
 # Import the accuracy metric for evaluation
 from sklearn.metrics import accuracy_score
 # Import joblib for saving our models and scaler
