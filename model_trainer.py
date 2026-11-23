@@ -83,4 +83,3 @@ except FileNotFoundError:
     print("Please ensure 'features.csv' is in the same directory.")
 except Exception as e:
     print(f"An error occurred: {e}")
-    print("Please ensure 'features.csv' is in the same directory.")
