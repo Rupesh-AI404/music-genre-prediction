@@ -4,8 +4,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+# Import TensorFlow and the Keras modules
 
+# TensorFlow is the backend engine that powers Keras.
 
+import tensorflow as tf
 # --- 1. Load and Prepare the Data ---
 
 # Define the path to our dataset
