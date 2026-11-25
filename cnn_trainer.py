@@ -4,12 +4,29 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+# --- THIS IS THE NEW CODE BLOCK TO ADD ---
+
 # Import TensorFlow and the Keras modules
-
 # TensorFlow is the backend engine that powers Keras.
-
 import tensorflow as tf
+
+# Sequential is the model type we'll use, a linear stack of layers.
+from tensorflow.keras.models import Sequential
+
+# Here we import all the "bricks" or layer types we need to build our CNN.
+from tensorflow.keras.layers import (
+    Conv1D,               # The 1D convolutional layer
+    MaxPooling1D,         # The 1D max pooling layer
+    BatchNormalization,   # The layer for stabilizing learning
+    Dropout,              # The layer for preventing overfitting
+    Flatten,              # The layer to bridge conv blocks and dense layers
+    Dense                 # The classic fully-connected neural network layer
+)
+
+# --- END OF THE NEW CODE BLOCK ---
+
 # --- 1. Load and Prepare the Data ---
+# (The rest of your script from the previous task remains the same)
 
 # Define the path to our dataset
 CSV_PATH = "features.csv"
@@ -27,43 +44,20 @@ X = features_df.drop('genre_label', axis=1)
 y = features_df['genre_label']
 
 # Split the data into training and testing sets
-# We use the same random_state to ensure the split is identical to the one
-# used for our traditional models, allowing for a fair comparison.
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.25, random_state=42, stratify=y
 )
 
 # Scale the features
 scaler = StandardScaler()
-# Fit on training data and transform both sets
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-print("\nData preparation complete. Shapes before reshaping:")
-print(f"X_train_scaled shape: {X_train_scaled.shape}")
-print(f"X_test_scaled shape: {X_test_scaled.shape}")
-
-# --- 2. Reshape Data for CNN Input ---
-# This is the core of the current task.
-
+# Reshape Data for CNN Input
 print("\n--- Reshaping data for CNN model ---")
-
-# A 1D CNN expects a 3D array as input: (num_samples, num_features, num_channels)
-# Our data has num_samples and num_features, we need to add the 'channels' dimension.
-# For our data, we have only one channel.
-# We can use numpy.expand_dims to add an extra dimension at the end (axis=-1).
-
 X_train_cnn = np.expand_dims(X_train_scaled, axis=-1)
 X_test_cnn = np.expand_dims(X_test_scaled, axis=-1)
 
-# --- Verification Step ---
-# Let's check the new shapes to confirm the operation was successful.
 print("\nShapes after reshaping for CNN:")
-print(f"X_train_cnn shape: {X_train_cnn.shape}") # Expected: (7500, 28, 1)
-print(f"X_test_cnn shape: {X_test_cnn.shape}")   # Expected: (2500, 28, 1)
-
-# The target variables (y_train, y_test) are pandas Series of integers.
-# This format is already perfect for use with TensorFlow/Keras, especially
-# with the 'sparse_categorical_crossentropy' loss function, so no changes are needed.
-print(f"\ny_train shape: {y_train.shape}")
-print(f"y_test shape: {y_test.shape}")
+print(f"X_train_cnn shape: {X_train_cnn.shape}")
+print(f"X_test_cnn shape: {X_test_cnn.shape}")
