@@ -24,7 +24,6 @@ from tensorflow.keras.layers import (
 )
 
 # --- END OF THE NEW CODE BLOCK ---
-
 # --- 1. Load and Prepare the Data ---
 # (The rest of your script from the previous task remains the same)
 
